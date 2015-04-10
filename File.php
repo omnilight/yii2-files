@@ -78,8 +78,9 @@ class File extends ActiveRecord
     {
         if (parent::load($data, $formName)) {
             if ($this->scenario == self::SCENARIO_FILE_UPLOAD) {
-                if (!($this->fileUpload instanceof UploadedFile))
+                if (!($this->fileUpload instanceof UploadedFile)) {
                     $this->fileUpload = UploadedFile::getInstance($this, 'fileUpload');
+                }
             }
             return true;
         } else {
@@ -151,6 +152,6 @@ class File extends ActiveRecord
      */
     protected function generateName()
     {
-        return $this->id . $this->getOriginalExtension();
+        return $this->id . '.' . $this->getOriginalExtension();
     }
 }
