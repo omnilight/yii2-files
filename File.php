@@ -90,7 +90,7 @@ class File extends ActiveRecord
 
     public function afterSave($insert, $changedAttributes)
     {
-        if ($this->scenario == self::SCENARIO_FILE_UPLOAD) {
+        if ($this->scenario == self::SCENARIO_FILE_UPLOAD && $this->fileUpload instanceof UploadedFile) {
             if ($this->name) {
                 @unlink($this->getFileName());
             }
