@@ -1,16 +1,17 @@
 <?php
 
 namespace omnilight\files;
-use yii\db\ActiveRecord;
-use yii\helpers\FileHelper;
+
 use Yii;
-use yii\web\UploadedFile;
 use yii\behaviors\TimestampBehavior;
+use yii\db\ActiveRecord;
 use yii\db\Expression;
+use yii\helpers\FileHelper;
+use yii\web\UploadedFile;
 
 
 /**
- * @property string $id 
+ * @property string $id
  * @property string $original_name
  * @property string $name
  * @property int $file_size
@@ -52,9 +53,9 @@ class File extends ActiveRecord
     public function rules()
     {
         return [
-            'fileRule' => [['fileUpload'], 'file', 'skipOnEmpty' => false, 'on' => self::SCENARIO_FILE_UPLOAD, 'when' => function() {
+            'fileRule' => [['fileUpload'], 'file', 'skipOnEmpty' => false, 'on' => self::SCENARIO_FILE_UPLOAD, 'when' => function () {
                 return $this->isNewRecord;
-            } ],
+            }],
         ];
     }
 
@@ -74,39 +75,65 @@ class File extends ActiveRecord
         ];
     }
 
-    public function load($data, $formName = null)
+    public function loadWithFile($data, $formName = null)
     {
-        if (parent::load($data, $formName)) {
-            if ($this->scenario == self::SCENARIO_FILE_UPLOAD) {
-                if (!($this->fileUpload instanceof UploadedFile)) {
-                    $this->fileUpload = UploadedFile::getInstance($this, 'fileUpload');
-                }
-            }
-            return true;
-        } else {
+        if ($this->load($data, $formName) == false) {
             return false;
         }
+
+        if (!($this->fileUpload instanceof UploadedFile)) {
+            $this->fileUpload = UploadedFile::getInstance($this, 'fileUpload');
+        }
+        return true;
     }
 
     public function afterSave($insert, $changedAttributes)
     {
-        if ($this->scenario == self::SCENARIO_FILE_UPLOAD && $this->fileUpload instanceof UploadedFile) {
-            if ($this->name) {
-                @unlink($this->getFileName());
-            }
-
-            $this->original_name = $this->fileUpload->name;
-            $this->file_size = filesize($this->fileUpload->tempName);
-
-            $this->name = $this->generateName();
-
-            $this->updateAttributes(['original_name', 'name', 'files_size']);
-
-            $fileName = $this->getFileName();
-            FileHelper::createDirectory(dirname($fileName));
-            $this->fileUpload->saveAs($fileName);
+        if ($this->fileUpload instanceof UploadedFile) {
+            $this->uploadFile($this->fileUpload);
         }
         parent::afterSave($insert, $changedAttributes);
+    }
+
+    public function uploadFile(UploadedFile $fileUpload)
+    {
+        if ($this->name) {
+            @unlink($this->getFileName());
+        }
+
+        $this->original_name = $fileUpload;
+        $this->file_size = filesize($fileUpload->tempName);
+        $this->name = $this->generateName();
+
+        $this->updateAttributes(['original_name', 'name', 'files_size']);
+
+        $fileName = $this->getFileName();
+        FileHelper::createDirectory(dirname($fileName));
+        $this->fileUpload->saveAs($fileName);
+    }
+
+    /**
+     * @return bool|string
+     */
+    public function getFileName()
+    {
+        return Yii::getAlias('@webroot/uploads/' . $this->name);
+    }
+
+    /**
+     * @return string
+     */
+    protected function generateName()
+    {
+        return $this->id . '.' . $this->getOriginalExtension();
+    }
+
+    /**
+     * @return string
+     */
+    public function getOriginalExtension()
+    {
+        return strtolower(pathinfo($this->original_name, PATHINFO_EXTENSION));
     }
 
     public function afterDelete()
@@ -118,17 +145,9 @@ class File extends ActiveRecord
     /**
      * @return bool|string
      */
-    public function getFileName()
-    {
-        return Yii::getAlias('@webroot/uploads/'.$this->name);
-    }
-
-    /**
-     * @return bool|string
-     */
     public function getUrl()
     {
-        return Yii::getAlias('@web/uploads/'.$this->name);
+        return Yii::getAlias('@web/uploads/' . $this->name);
     }
 
     /**
@@ -137,21 +156,5 @@ class File extends ActiveRecord
     public function getFileExtension()
     {
         return strtolower(pathinfo($this->name, PATHINFO_EXTENSION));
-    }
-
-    /**
-     * @return string
-     */
-    public function getOriginalExtension()
-    {
-        return strtolower(pathinfo($this->original_name, PATHINFO_EXTENSION));
-    }
-
-    /**
-     * @return string
-     */
-    protected function generateName()
-    {
-        return $this->id . '.' . $this->getOriginalExtension();
     }
 }
