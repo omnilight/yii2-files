@@ -101,7 +101,7 @@ class File extends ActiveRecord
             @unlink($this->getFileName());
         }
 
-        $this->original_name = $fileUpload;
+        $this->original_name = $fileUpload->name;
         $this->file_size = filesize($fileUpload->tempName);
         $this->name = $this->generateName();
 
