@@ -55,7 +55,7 @@ trait FileTrait
     public function uploadFile(UploadedFile $fileUpload)
     {
         /** @var ActiveRecord | self $this */
-        if ($this->name) {
+        if ($this->file_name) {
             @unlink($this->getFileName());
         }
 
