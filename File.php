@@ -105,7 +105,7 @@ class File extends ActiveRecord
         $this->file_size = filesize($fileUpload->tempName);
         $this->name = $this->generateName();
 
-        $this->updateAttributes(['original_name', 'name', 'files_size']);
+        $this->updateAttributes(['original_name', 'name', 'file_size']);
 
         $fileName = $this->getFileName();
         FileHelper::createDirectory(dirname($fileName));

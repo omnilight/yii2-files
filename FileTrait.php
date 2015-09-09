@@ -63,7 +63,7 @@ trait FileTrait
         $this->file_size = filesize($fileUpload->tempName);
         $this->file_name = $this->generateFileName();
 
-        $this->updateAttributes(['file_original_name', 'file_name', 'files_size']);
+        $this->updateAttributes(['file_original_name', 'file_name', 'file_size']);
 
         $fileName = $this->getFileName();
         FileHelper::createDirectory(dirname($fileName));
